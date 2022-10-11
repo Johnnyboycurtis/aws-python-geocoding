@@ -1,16 +1,23 @@
 # Define function directory
 ARG FUNCTION_DIR="/function"
 
-FROM python:buster as build-image
+FROM continuumio/miniconda3 AS miniconda3
 
 # Install aws-lambda-cpp build dependencies
-RUN apt-get update && \
-  apt-get install -y \
-  g++ \
-  make \
-  cmake \
-  unzip \
-  libcurl4-openssl-dev
+# Install GCC (Alpine uses musl but we compile and link dependencies with GCC)
+RUN apt-get install libstdc++ -y
+
+# Stage 2 - build function and dependencies
+FROM miniconda3 AS build-image
+# Install aws-lambda-cpp build dependencies
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+    build-essential \
+    libtool \
+    autoconf \
+    automake \
+    make \
+    cmake \
+    libcurl4
 
 # Include global arg in this stage of the build
 ARG FUNCTION_DIR
